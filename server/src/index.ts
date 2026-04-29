@@ -21,11 +21,18 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
 
-// Serve OHIF static assets (production)
+// Serve OHIF static assets
 const OHIF_DIST_PATH = path.join(__dirname, '../../ohif-viewer/dist');
 app.use('/ohif', express.static(OHIF_DIST_PATH));
 app.get('/ohif*', (_req, res) => {
   res.sendFile(path.join(OHIF_DIST_PATH, 'index.html'));
+});
+
+// Serve web app static assets (production)
+const WEB_DIST_PATH = path.join(__dirname, '../../web/dist');
+app.use(express.static(WEB_DIST_PATH));
+app.get('*', (_req, res) => {
+  res.sendFile(path.join(WEB_DIST_PATH, 'index.html'));
 });
 
 app.listen(PORT, () => {

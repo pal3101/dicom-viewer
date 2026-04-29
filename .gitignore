@@ -2,9 +2,7 @@
 node_modules/
 
 # Build output
-dist/
-ohif-viewer/dist/
-web/dist/
+server/dist/
 
 # Environment
 .env
@@ -29,7 +27,6 @@ npm-debug.log*
 
 # OHIF source (cloned repo, not part of project)
 ohif-viewer-source/
-ohif-viewer/
 
 # Temp
 *.tmp

@@ -23,12 +23,12 @@ export async function getTempFileURLBatch(fileIDs: string[]): Promise<string[]> 
     const uncached = batch.filter((id) => !tempUrlCache.has(id));
 
     if (uncached.length > 0) {
-      const fileList = uncached.map((fileID) => ({ fileID, maxAge: 86400, urlType: 'origin' }));
+      const fileList = uncached.map((fileID) => ({ fileID, maxAge: 86400 }));
       const result = await app.getTempFileURL({ fileList });
 
       if (result?.fileList) {
         for (const item of result.fileList) {
-          const url = item.tempFileURL || item.download_url;
+          const url = item.tempFileURL;
           if (url) {
             tempUrlCache.set(item.fileID, { url, expiresAt: Date.now() + 86400000 });
           }
