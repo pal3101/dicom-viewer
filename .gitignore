@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+ohif-viewer/dist/
+web/dist/
+
+# Environment
+.env
+.env.local
+.env.*.local
+*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# TypeScript
+*.tsbuildinfo
+
+# OHIF source (cloned repo, not part of project)
+ohif-viewer-source/
+ohif-viewer/
+
+# Temp
+*.tmp
+*.temp
