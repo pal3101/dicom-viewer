@@ -16,21 +16,4 @@ export default defineConfig({
       },
     },
   },
-  optimizeDeps: {
-    include: [
-      'globalthis',
-      'fast-deep-equal',
-      'pako',
-    ],
-  },
-  build: {
-    target: 'es2020',
-    chunkSizeWarningLimit: 2000,
-    commonjsOptions: {
-      transformMixedEsModules: true,
-    },
-  },
-  worker: {
-    format: 'es',
-  },
 });
