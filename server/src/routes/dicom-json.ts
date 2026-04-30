@@ -4,12 +4,11 @@ import {
   getSeriesByStudyId,
   getInstancesBySeriesId,
 } from '../db/cloudbase';
-import { getTempFileURLBatch } from '../services/cloudbase-storage';
 
 const router = Router();
 
 // GET /api/studies/:id/dicom-json
-// Returns OHIF dicomjson format with temp URLs for direct image loading
+// Returns OHIF dicomjson format with proxy URLs for image loading
 router.get('/studies/:id/dicom-json', async (req, res) => {
   try {
     const study = await getStudyById(req.params.id);
@@ -17,39 +16,16 @@ router.get('/studies/:id/dicom-json', async (req, res) => {
 
     const seriesList = await getSeriesByStudyId(req.params.id);
 
-    // Collect all fileIDs for batch temp URL fetch
-    const allFileIDs: { seriesId: string; instanceId: string; fileID: string }[] = [];
-    const fileIDToInstance = new Map<string, { seriesId: string; instanceId: string }>();
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
 
-    for (const series of seriesList) {
-      const instances = await getInstancesBySeriesId(series._id);
-      for (const inst of instances) {
-        if (inst.fileID) {
-          allFileIDs.push({ seriesId: series._id, instanceId: inst._id, fileID: inst.fileID });
-          fileIDToInstance.set(inst.fileID, { seriesId: series._id, instanceId: inst._id });
-        }
-      }
-    }
-
-    // Batch get temp URLs (CloudBase supports up to 50 per call)
-    const urlMap = new Map<string, string>();
-    for (let i = 0; i < allFileIDs.length; i += 50) {
-      const batch = allFileIDs.slice(i, i + 50);
-      const results = await getTempFileURLBatch(batch.map((b) => b.fileID));
-      for (let j = 0; j < batch.length && j < results.length; j++) {
-        urlMap.set(batch[j].fileID, results[j]);
-      }
-    }
-
-    // Build OHIF dicomjson structure
     const ohifSeries = await Promise.all(
       seriesList.map(async (series) => {
         const instances = await getInstancesBySeriesId(series._id);
 
         const ohifInstances = instances
+          .filter((inst) => inst.fileID)
           .map((inst) => {
-            const imageUrl = urlMap.get(inst.fileID);
-            if (!imageUrl) return null;
+            const imageUrl = `${baseUrl}/api/dicom-image?fileID=${encodeURIComponent(inst.fileID)}`;
 
             return {
               metadata: {
@@ -79,11 +55,10 @@ router.get('/studies/:id/dicom-json', async (req, res) => {
                   ImageOrientationPatient: inst.imageOrientationPatient,
                 }),
               },
-              url: `${imageUrl}?_cb=${Date.now()}`,
-              imageId: `wadouri:${imageUrl}?_cb=${Date.now()}`,
+              url: imageUrl,
+              imageId: `wadouri:${imageUrl}`,
             };
-          })
-          .filter(Boolean);
+          });
 
         return {
           SeriesInstanceUID: series.seriesInstanceUID,

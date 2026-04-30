@@ -1,16 +1,35 @@
 import cloudbase from '@cloudbase/node-sdk';
 import type { Study, Series, Instance } from '../types';
 
-const app = cloudbase.init({
-  env: process.env.CLOUDBASE_ENV_ID,
-  secretId: process.env.TENCENTCLOUD_SECRETID,
-  secretKey: process.env.TENCENTCLOUD_SECRETKEY,
-});
+let _app: ReturnType<typeof cloudbase.init> | null = null;
+let _db: ReturnType<ReturnType<typeof cloudbase.init>['database']> | null = null;
 
-export const db = app.database();
+function getApp(): ReturnType<typeof cloudbase.init> {
+  if (!_app) {
+    const envId = process.env.CLOUDBASE_ENV_ID;
+    const secretId = process.env.TENCENTCLOUD_SECRETID;
+    const secretKey = process.env.TENCENTCLOUD_SECRETKEY;
+
+    if (!envId || !secretId || !secretKey) {
+      throw new Error(
+        'Missing CloudBase credentials. Set CLOUDBASE_ENV_ID, TENCENTCLOUD_SECRETID, and TENCENTCLOUD_SECRETKEY environment variables.',
+      );
+    }
+
+    _app = cloudbase.init({ env: envId, secretId, secretKey });
+  }
+  return _app;
+}
+
+export function getDb(): ReturnType<ReturnType<typeof cloudbase.init>['database']> {
+  if (!_db) {
+    _db = getApp().database();
+  }
+  return _db;
+}
 
 export async function checkDuplicate(sopInstanceUID: string): Promise<boolean> {
-  const result = await db.collection('instances')
+  const result = await getDb().collection('instances')
     .where({ sopInstanceUID })
     .limit(1)
     .get();
@@ -18,7 +37,7 @@ export async function checkDuplicate(sopInstanceUID: string): Promise<boolean> {
 }
 
 export async function addInstance(instance: Omit<Instance, '_id'>): Promise<string> {
-  const result = await db.collection('instances').add(instance);
+  const result = await getDb().collection('instances').add(instance);
   return result.id || result.ids?.[0] || '';
 }
 
@@ -30,19 +49,19 @@ export async function findOrCreateStudy(meta: {
   modality: string;
   description: string;
 }): Promise<string> {
-  const existing = await db.collection('studies')
+  const existing = await getDb().collection('studies')
     .where({ studyInstanceUID: meta.studyInstanceUID })
     .limit(1)
     .get();
 
   if (existing.data.length > 0) {
-    await db.collection('studies').doc(existing.data[0]._id).update({
+    await getDb().collection('studies').doc(existing.data[0]._id).update({
       updatedAt: new Date(),
     });
     return existing.data[0]._id;
   }
 
-  const result = await db.collection('studies').add({
+  const result = await getDb().collection('studies').add({
     studyInstanceUID: meta.studyInstanceUID,
     patientName: meta.patientName,
     patientId: meta.patientId,
@@ -64,7 +83,7 @@ export async function findOrCreateSeries(params: {
   seriesDescription: string;
   modality: string;
 }): Promise<string> {
-  const existing = await db.collection('series')
+  const existing = await getDb().collection('series')
     .where({ seriesInstanceUID: params.seriesInstanceUID })
     .limit(1)
     .get();
@@ -73,7 +92,7 @@ export async function findOrCreateSeries(params: {
     return existing.data[0]._id;
   }
 
-  const result = await db.collection('series').add({
+  const result = await getDb().collection('series').add({
     seriesInstanceUID: params.seriesInstanceUID,
     studyId: params.studyId,
     seriesNumber: params.seriesNumber,
@@ -84,26 +103,26 @@ export async function findOrCreateSeries(params: {
   return result.id || result.ids?.[0] || '';
 }
 
-export async function incrementStudyCounts(studyId: string, seriesId: string): Promise<void> {
-  await db.collection('studies').doc(studyId).update({
-    instanceCount: db.command.inc(1),
+export async function incrementStudyCounts(studyId: string, _seriesId: string): Promise<void> {
+  await getDb().collection('studies').doc(studyId).update({
+    instanceCount: getDb().command.inc(1),
   });
 }
 
 export async function getStudies(): Promise<Study[]> {
-  const result = await db.collection('studies')
+  const result = await getDb().collection('studies')
     .orderBy('studyDate', 'desc')
     .get();
   return result.data as Study[];
 }
 
 export async function getStudyById(studyId: string): Promise<Study | null> {
-  const result = await db.collection('studies').doc(studyId).get();
+  const result = await getDb().collection('studies').doc(studyId).get();
   return result.data?.[0] as Study | undefined || null;
 }
 
 export async function getSeriesByStudyId(studyId: string): Promise<Series[]> {
-  const result = await db.collection('series')
+  const result = await getDb().collection('series')
     .where({ studyId })
     .orderBy('seriesNumber', 'asc')
     .get();
@@ -111,7 +130,7 @@ export async function getSeriesByStudyId(studyId: string): Promise<Series[]> {
 }
 
 export async function getInstancesBySeriesId(seriesId: string): Promise<Instance[]> {
-  const result = await db.collection('instances')
+  const result = await getDb().collection('instances')
     .where({ seriesId })
     .orderBy('instanceNumber', 'asc')
     .get();

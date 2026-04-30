@@ -3,5 +3,4 @@ web/node_modules
 server/node_modules
 ohif-viewer-source
 .git
-.env
 *.log

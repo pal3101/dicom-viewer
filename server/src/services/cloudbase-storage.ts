@@ -1,23 +1,30 @@
 import cloudbase from '@cloudbase/node-sdk';
 
-const app = cloudbase.init({
-  env: process.env.CLOUDBASE_ENV_ID,
-  secretId: process.env.TENCENTCLOUD_SECRETID,
-  secretKey: process.env.TENCENTCLOUD_SECRETKEY,
-});
+let _storageApp: ReturnType<typeof cloudbase.init> | null = null;
 
-// In-memory cache for temp URLs (valid up to 24h)
+function getStorageApp(): ReturnType<typeof cloudbase.init> {
+  if (!_storageApp) {
+    const envId = process.env.CLOUDBASE_ENV_ID;
+    const secretId = process.env.TENCENTCLOUD_SECRETID;
+    const secretKey = process.env.TENCENTCLOUD_SECRETKEY;
+
+    if (!envId || !secretId || !secretKey) {
+      throw new Error(
+        'Missing CloudBase credentials. Set CLOUDBASE_ENV_ID, TENCENTCLOUD_SECRETID, and TENCENTCLOUD_SECRETKEY environment variables.',
+      );
+    }
+
+    _storageApp = cloudbase.init({ env: envId, secretId, secretKey });
+  }
+  return _storageApp;
+}
+
 const tempUrlCache = new Map<string, { url: string; expiresAt: number }>();
 
-/**
- * Get temporary download URLs for a batch of CloudBase file IDs.
- * CloudBase supports up to 50 file IDs per call.
- * Results are cached for 24 hours.
- */
 export async function getTempFileURLBatch(fileIDs: string[]): Promise<string[]> {
   const results: string[] = [];
+  const app = getStorageApp();
 
-  // Process in batches of 50 (CloudBase limit)
   for (let i = 0; i < fileIDs.length; i += 50) {
     const batch = fileIDs.slice(i, i + 50);
     const uncached = batch.filter((id) => !tempUrlCache.has(id));
@@ -36,7 +43,6 @@ export async function getTempFileURLBatch(fileIDs: string[]): Promise<string[]> 
       }
     }
 
-    // Build results in order
     for (const fileID of batch) {
       const cached = tempUrlCache.get(fileID);
       results.push(cached?.url || '');

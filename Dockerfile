@@ -3,12 +3,13 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Install server dependencies
-COPY server/package.json server/package-lock.json ./server/
-RUN cd server && npm ci --production
+COPY server/package.json ./server/
+RUN cd server && npm install --production
 
 # Copy server source (runs with tsx)
 COPY server/src ./server/src
 COPY server/tsconfig.json ./server/
+COPY server/.env ./server/
 
 # Copy pre-built web frontend
 COPY web/dist ./web/dist
@@ -19,6 +20,7 @@ COPY ohif-viewer/dist ./ohif-viewer/dist
 # Install tsx globally for running TypeScript
 RUN npm install -g tsx
 
+# CloudBase CloudRun injects PORT; default to 80 for local Docker
 ENV PORT=80
 EXPOSE 80
 
