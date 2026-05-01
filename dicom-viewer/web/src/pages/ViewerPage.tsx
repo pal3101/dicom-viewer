@@ -63,7 +63,7 @@ export function ViewerPage() {
   }, [studyId]);
 
   const jsonUrl = `${API_BASE}/api/studies/${studyId}/dicom-json`;
-  const ohifSrc = `${OHIF_BASE_URL}/viewer/dicomjson?url=${encodeURIComponent(jsonUrl)}&hangingProtocolId=${encodeURIComponent(viewMode)}`;
+  const ohifSrc = `${OHIF_BASE_URL}/viewer/dicomjson?url=${encodeURIComponent(jsonUrl)}&hangingprotocolId=${encodeURIComponent(viewMode)}`;
 
   if (!studyId) {
     return (
