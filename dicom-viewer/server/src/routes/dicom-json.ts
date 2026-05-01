@@ -7,6 +7,14 @@ import {
 
 const router = Router();
 
+function toDicomDate(value: string | undefined): string {
+  return value?.replace(/-/g, '') || '';
+}
+
+function getSeriesInstanceCount(instances: Array<{ fileID: string }>): number {
+  return instances.filter((inst) => Boolean(inst.fileID)).length;
+}
+
 // GET /api/studies/:id/dicom-json
 // Returns OHIF dicomjson format with proxy URLs for image loading
 router.get('/studies/:id/dicom-json', async (req, res) => {
@@ -21,6 +29,7 @@ router.get('/studies/:id/dicom-json', async (req, res) => {
     const ohifSeries = await Promise.all(
       seriesList.map(async (series) => {
         const instances = await getInstancesBySeriesId(series._id);
+        const instanceCount = getSeriesInstanceCount(instances);
 
         const ohifInstances = instances
           .filter((inst) => inst.fileID)
@@ -32,8 +41,17 @@ router.get('/studies/:id/dicom-json', async (req, res) => {
                 StudyInstanceUID: study.studyInstanceUID,
                 SeriesInstanceUID: series.seriesInstanceUID,
                 SOPInstanceUID: inst.sopInstanceUID,
+                SOPClassUID: '1.2.840.10008.5.1.4.1.1.2',
                 Modality: series.modality || 'CT',
                 InstanceNumber: inst.instanceNumber || 1,
+                SeriesNumber: series.seriesNumber || 1,
+                SeriesDescription: series.seriesDescription || '',
+                StudyDate: toDicomDate(study.studyDate),
+                StudyTime: '',
+                SeriesDate: toDicomDate(study.studyDate),
+                SeriesTime: '',
+                PatientName: study.patientName || '',
+                PatientID: study.patientId || '',
                 Rows: inst.rows || 512,
                 Columns: inst.columns || 512,
                 SamplesPerPixel: inst.samplesPerPixel || 1,
@@ -68,16 +86,24 @@ router.get('/studies/:id/dicom-json', async (req, res) => {
           SeriesNumber: series.seriesNumber || 1,
           SeriesDescription: series.seriesDescription || '',
           Modality: series.modality,
+          StudyInstanceUID: study.studyInstanceUID,
+          NumInstances: instanceCount,
+          numberOfInstances: instanceCount,
           instances: ohifInstances,
         };
       }),
     );
 
+    const studyInstanceCount = seriesList.reduce((sum, _series, index) => {
+      const series = ohifSeries[index];
+      return sum + (series?.NumInstances || 0);
+    }, 0);
+
     const response = {
       studies: [
         {
           StudyInstanceUID: study.studyInstanceUID,
-          StudyDate: study.studyDate?.replace(/-/g, '') || '',
+          StudyDate: toDicomDate(study.studyDate),
           StudyTime: '',
           StudyDescription: study.description || '',
           PatientName: study.patientName || '',
@@ -86,8 +112,10 @@ router.get('/studies/:id/dicom-json', async (req, res) => {
           PatientSex: '',
           AccessionNumber: '',
           ModalitiesInStudy: study.modality,
+          Modalities: study.modality ? [study.modality] : [],
           NumberOfStudyRelatedSeries: seriesList.length,
-          NumberOfStudyRelatedInstances: study.instanceCount || 0,
+          NumberOfStudyRelatedInstances: studyInstanceCount,
+          NumInstances: studyInstanceCount,
           series: ohifSeries,
         },
       ],
