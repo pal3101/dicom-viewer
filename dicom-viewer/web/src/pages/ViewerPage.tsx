@@ -9,9 +9,9 @@ const API_BASE = isDev ? 'http://localhost:3001' : '';
 const OHIF_BASE_URL = import.meta.env.VITE_OHIF_URL || (isDev ? 'http://localhost:3001/ohif' : '/ohif');
 
 const VIEW_MODES = [
-  { id: '3d-four-up', label: '四窗 MPR' },
+  { id: 'fourUp', label: '四窗 MPR' },
   { id: 'mpr', label: '三视图 MPR' },
-  { id: '3d-primary', label: '3D 骨骼' },
+  { id: 'primary3D', label: '3D 骨骼' },
 ] as const;
 
 const DEFAULT_VIEW_MODE = VIEW_MODES[0].id;
