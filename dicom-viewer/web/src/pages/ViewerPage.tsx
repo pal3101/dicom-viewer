@@ -5,7 +5,8 @@ import { fetchStudyById } from '../lib/api';
 import type { Study } from '../types';
 
 const isDev = import.meta.env.DEV;
-const API_BASE = isDev ? 'http://localhost:3001' : '';
+const API_ORIGIN =
+  isDev ? 'http://localhost:3001' : (typeof window !== 'undefined' ? window.location.origin : '');
 const OHIF_BASE_URL = import.meta.env.VITE_OHIF_URL || (isDev ? 'http://localhost:3001/ohif' : '/ohif');
 
 const VIEW_MODES = [
@@ -62,7 +63,7 @@ export function ViewerPage() {
     };
   }, [studyId]);
 
-  const jsonUrl = `${API_BASE}/api/studies/${studyId}/dicom-json`;
+  const jsonUrl = new URL(`/api/studies/${studyId}/dicom-json`, API_ORIGIN).toString();
   const ohifSrc = `${OHIF_BASE_URL}/viewer/dicomjson?url=${encodeURIComponent(jsonUrl)}&hangingprotocolId=${encodeURIComponent(viewMode)}`;
 
   if (!studyId) {
