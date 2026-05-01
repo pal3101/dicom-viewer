@@ -1,0 +1,6 @@
+{
+  "envId": "dicom-001-9gyjnyfk6ab67241",
+  "cloudrun": {
+    "name": "dicom-viewer"
+  }
+}
