@@ -1,15 +1,15 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { parseDICOM } from '../services/dicom-parser';
-import { indexDICOMFile } from '../services/study-indexer';
-import { uploadFileToStorage } from '../services/cloudbase-storage';
+import { parseDICOM } from '../services/dicom-parser.js';
+import { indexDICOMFile } from '../services/study-indexer.js';
+import { uploadFileToStorage } from '../services/cloudbase-storage.js';
 import {
   getStudies,
   getStudyById,
   getSeriesByStudyId,
   getInstancesBySeriesId,
   deleteStudy,
-} from '../db/cloudbase';
+} from '../db/cloudbase.js';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });

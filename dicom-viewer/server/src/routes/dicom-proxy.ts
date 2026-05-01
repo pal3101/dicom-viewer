@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import https from 'https';
 import http from 'http';
-import { getTempFileURLBatch } from '../services/cloudbase-storage';
+import { getTempFileURLBatch } from '../services/cloudbase-storage.js';
 
 const router = Router();
 

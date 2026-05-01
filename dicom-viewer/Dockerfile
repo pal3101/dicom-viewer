@@ -6,10 +6,8 @@ WORKDIR /app
 COPY server/package.json ./server/
 RUN cd server && npm install --production
 
-# Copy server source (runs with tsx)
-COPY server/src ./server/src
-COPY server/tsconfig.json ./server/
-COPY server/.env ./server/
+# Copy compiled server output
+COPY server/dist ./server/dist
 
 # Copy pre-built web frontend
 COPY web/dist ./web/dist
@@ -17,12 +15,9 @@ COPY web/dist ./web/dist
 # Copy pre-built OHIF viewer
 COPY ohif-viewer/dist ./ohif-viewer/dist
 
-# Install tsx globally for running TypeScript
-RUN npm install -g tsx
-
 # CloudBase CloudRun injects PORT; default to 80 for local Docker
 ENV PORT=80
 EXPOSE 80
 
 WORKDIR /app/server
-CMD ["tsx", "src/index.ts"]
+CMD ["node", "dist/index.js"]

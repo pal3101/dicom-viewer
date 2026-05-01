@@ -1,5 +1,5 @@
 import cloudbase from '@cloudbase/node-sdk';
-import type { Study, Series, Instance } from '../types';
+import type { Study, Series, Instance } from '../types/index.js';
 
 let _app: ReturnType<typeof cloudbase.init> | null = null;
 let _db: ReturnType<ReturnType<typeof cloudbase.init>['database']> | null = null;

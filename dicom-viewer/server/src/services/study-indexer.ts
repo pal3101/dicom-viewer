@@ -1,11 +1,11 @@
-import type { DICOMMeta } from '../types';
+import type { DICOMMeta } from '../types/index.js';
 import {
   findOrCreateStudy,
   findOrCreateSeries,
   addInstance,
   incrementStudyCounts,
   checkDuplicate,
-} from '../db/cloudbase';
+} from '../db/cloudbase.js';
 
 export async function indexDICOMFile(
   meta: DICOMMeta,

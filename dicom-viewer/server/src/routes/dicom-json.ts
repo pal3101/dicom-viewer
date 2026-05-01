@@ -3,7 +3,7 @@ import {
   getStudyById,
   getSeriesByStudyId,
   getInstancesBySeriesId,
-} from '../db/cloudbase';
+} from '../db/cloudbase.js';
 
 const router = Router();
 

@@ -1,5 +1,5 @@
 import dicomParser from 'dicom-parser';
-import type { DICOMMeta } from '../types';
+import type { DICOMMeta } from '../types/index.js';
 
 function readTag(dataSet: dicomParser.DataSet, tag: string): string {
   return dataSet.string(tag) || '';
