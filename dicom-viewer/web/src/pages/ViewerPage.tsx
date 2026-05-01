@@ -64,7 +64,6 @@ export function ViewerPage() {
   }, [studyId]);
 
   const jsonUrl = new URL(`/api/studies/${studyId}/dicom-json`, API_ORIGIN).toString();
-  const ohifSrc = `${OHIF_BASE_URL}/viewer/dicomjson?url=${encodeURIComponent(jsonUrl)}&hangingprotocolId=${encodeURIComponent(viewMode)}`;
 
   if (!studyId) {
     return (
@@ -104,6 +103,8 @@ export function ViewerPage() {
       </div>
     );
   }
+
+  const ohifSrc = `${OHIF_BASE_URL}/viewer/dicomjson?url=${encodeURIComponent(jsonUrl)}&StudyInstanceUIDs=${encodeURIComponent(study.studyInstanceUID)}&hangingprotocolId=${encodeURIComponent(viewMode)}`;
 
   return (
     <div className="h-[calc(100vh-60px)] w-full flex flex-col">
